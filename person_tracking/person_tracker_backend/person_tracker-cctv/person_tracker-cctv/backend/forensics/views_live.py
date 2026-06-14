@@ -233,7 +233,10 @@ class LiveAlertsView(APIView):
         try:
             session = LiveTrackingSession.objects.get(id=session_id)
         except LiveTrackingSession.DoesNotExist:
-            return Response({'error': 'Session not found'}, status=404)
+            # Fallback: maybe the frontend passed the case_id instead of session_id
+            session = LiveTrackingSession.objects.filter(case_id=session_id).first()
+            if not session:
+                return Response({'error': 'Session not found'}, status=404)
 
         alerts = LiveAlert.objects.filter(session=session).order_by('-timestamp')[:50]
         data = []
